@@ -130,3 +130,27 @@ resource "aws_default_security_group" "default-security-group" {
     Name = "${var.environment}-default-security-group"
   }
 }
+
+data "aws_ami" "latest-amazon-linux-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-kernel-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+output "amazon-linux-ami-id" {
+  value = data.aws_ami.latest-amazon-linux-ami.id
+}
