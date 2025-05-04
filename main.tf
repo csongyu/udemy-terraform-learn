@@ -51,3 +51,8 @@ resource "aws_route_table" "my-route-table" {
     Name = "${var.environment}-route-table"
   }
 }
+
+resource "aws_route_table_association" "my-association" {
+  subnet_id      = aws_subnet.my-subnet-1.id
+  route_table_id = aws_route_table.my-route-table.id
+}
