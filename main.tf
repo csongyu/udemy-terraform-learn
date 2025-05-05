@@ -3,19 +3,15 @@ provider "aws" {
 }
 
 variable "vpc_cidr_block" {
-
 }
 
 variable "subnet_cidr_block" {
-
 }
 
 variable "availability_zone" {
-
 }
 
 variable "environment" {
-
 }
 
 resource "aws_vpc" "my-vpc" {
@@ -68,9 +64,8 @@ resource "aws_default_route_table" "main-route-table" {
   }
 }
 
-variable "my_cidr_ipv4" {
-
-}
+# variable "my_cidr_ipv4" {
+# }
 
 # resource "aws_security_group" "my-security-group" {
 #   name   = "my-security-group"
@@ -109,7 +104,8 @@ resource "aws_default_security_group" "default-security-group" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.my_cidr_ipv4]
+    cidr_blocks = ["0.0.0.0/0"]
+    # cidr_blocks = [var.my_cidr_ipv4]
   }
 
   ingress {
@@ -153,4 +149,37 @@ data "aws_ami" "latest-amazon-linux-ami" {
 
 output "amazon-linux-ami-id" {
   value = data.aws_ami.latest-amazon-linux-ami.id
+}
+
+variable "public_key_path" {
+}
+
+resource "aws_key_pair" "ssh-key-pair" {
+  key_name   = "aws-ec2-key-pair"
+  public_key = file(var.public_key_path)
+}
+
+variable "instance_type" {
+}
+
+resource "aws_instance" "my-nginx" {
+  ami           = data.aws_ami.latest-amazon-linux-ami.id
+  instance_type = var.instance_type
+
+  subnet_id                   = aws_subnet.my-subnet-1.id
+  availability_zone           = var.availability_zone
+  vpc_security_group_ids      = [aws_default_security_group.default-security-group.id]
+  associate_public_ip_address = true
+  key_name                    = aws_key_pair.ssh-key-pair.key_name
+
+  user_data                   = file("entry-script.sh")
+  user_data_replace_on_change = true
+
+  tags = {
+    Name = "${var.environment}-nginx"
+  }
+}
+
+output "ec2-public-ip" {
+  value = aws_instance.my-nginx.public_ip
 }
