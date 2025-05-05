@@ -162,6 +162,9 @@ resource "aws_key_pair" "ssh-key-pair" {
 variable "instance_type" {
 }
 
+variable "private_key_path" {
+}
+
 resource "aws_instance" "my-nginx" {
   ami           = data.aws_ami.latest-amazon-linux-ami.id
   instance_type = var.instance_type
@@ -172,8 +175,28 @@ resource "aws_instance" "my-nginx" {
   associate_public_ip_address = true
   key_name                    = aws_key_pair.ssh-key-pair.key_name
 
-  user_data                   = file("entry-script.sh")
-  user_data_replace_on_change = true
+  # user_data                   = file("entry-script.sh")
+  # user_data_replace_on_change = true
+
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ec2-user"
+    private_key = file(var.private_key_path)
+  }
+
+  provisioner "file" {
+    source      = "entry-script.sh"
+    destination = "/home/ec2-user/entry-script.sh"
+  }
+
+  provisioner "remote-exec" {
+    script = file("entry-script.sh")
+  }
+
+  provisioner "local-exec" {
+    command = "echo ${self.public_ip} > local-exec.txt"
+  }
 
   tags = {
     Name = "${var.environment}-nginx"
