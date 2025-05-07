@@ -1,3 +1,12 @@
+terraform {
+  required_version = ">= 0.12.0"
+  backend "s3" {
+    region = "us-west-2"
+    bucket = "chensongyu-terraform-state-bucket"
+    key    = "terraform.tfstate"
+  }
+}
+
 provider "aws" {
   region = "us-west-2"
 }
